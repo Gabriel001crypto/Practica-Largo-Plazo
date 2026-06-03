@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitoreo de Nodos IoT - Capa de Aplicación</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            display: flex;
+            height: 100vh;
+            background-color: #f4f6f9;
+        }
+
+        /* Panel Lateral */
+        #sidebar {
+            width: 300px;
+            background-color: #1e293b;
+            color: #ffffff;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+        }
+
+        #sidebar h2 {
+            font-size: 1.2rem;
+            border-bottom: 2px solid #38bdf8;
+            padding-bottom: 10px;
+        }
+
+        .dispositivo-card {
+            background-color: #334155;
+            padding: 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .dispositivo-card:hover {
+            background-color: #475569;
+        }
+
+        .dispositivo-card h3 {
+            font-size: 1rem;
+            color: #38bdf8;
+            margin-bottom: 5px;
+        }
+
+        .dispositivo-card p {
+            font-size: 0.85rem;
+            color: #cbd5e1;
+        }
+
+        /* Contenedor del Mapa */
+        #map-container {
+            flex-grow: 1;
+            position: relative;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="sidebar">
+        <h2>Dispositivos Activos</h2>
+        
+        <div class="dispositivo-card" onclick="enfocarDispositivo('lora1')">
+            <h3>LORA 1 (GPS)</h3>
+            <p>Lat: --.------</p>
+            <p>Lon: --.------</p>
+        </div>
+
+        <div class="dispositivo-card" onclick="enfocarDispositivo('lora2')">
+            <h3>LORA 2 (GPS)</h3>
+            <p>Lat: --.------</p>
+            <p>Lon: --.------</p>
+        </div>
+
+        <div class="dispositivo-card" onclick="enfocarDispositivo('lora3')">
+            <h3>LORA 3 (GPS)</h3>
+            <p>Lat: --.------</p>
+            <p>Lon: --.------</p>
+        </div>
+
+        <div class="dispositivo-card" onclick="enfocarDispositivo('lily1')">
+            <h3>Lilygo 1</h3>
+            <p>Estado: Conectado</p>
+        </div>
+
+        <div class="dispositivo-card" onclick="enfocarDispositivo('lily2')">
+            <h3>Lilygo 2</h3>
+            <p>Estado: Conectado</p>
+        </div>
+    </div>
+
+    <div id="map-container">
+        <div id="map"></div>
+    </div>
+
+    <script src="https://maps.googleapis.com/maps/api/js?key=TU_API_KEY&callback=initMap" async defer></script>
+
+    <script>
+        let map;
+        // Coordenadas simuladas iniciales para los 3 nodos GPS
+        const ubicaciones = {
+            lora1: { lat: -0.1807, lng: -78.4678, nombre: "Nodo LORA 1" },
+            lora2: { lat: -0.1900, lng: -78.4700, nombre: "Nodo LORA 2" },
+            lora3: { lat: -0.1750, lng: -78.4600, nombre: "Nodo LORA 3" }
+        };
+
+        function initMap() {
+            // Inicializa el mapa centrado en una ubicación por defecto
+            map = new google.maps.Map(document.getElementById("map"), {
+                zoom: 14,
+                center: ubicaciones.lora1, 
+                mapTypeId: 'roadmap' // Puedes cambiarlo a 'satellite' o usar Street View
+            });
+
+            // Colocar marcadores en el mapa para los nodos GPS
+            for (let nodo in ubicaciones) {
+                new google.maps.Marker({
+                    position: { lat: ubicaciones[nodo].lat, lng: ubicaciones[nodo].lng },
+                    map: map,
+                    title: ubicaciones[nodo].nombre
+                });
+            }
+        }
+
+        // Función para que el usuario haga clic en la lista y el mapa se mueva al dispositivo
+        function enfocarDispositivo(id) {
+            if (ubicaciones[id]) {
+                map.setCenter(ubicaciones[id]);
+                map.setZoom(16);
+            } else {
+                alert("El dispositivo seleccionado no cuenta con módulo GPS activo.");
+            }
+        }
+    </script>
+</body>
+</html>
