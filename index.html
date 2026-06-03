@@ -62,12 +62,14 @@
         /* Contenedor del Mapa */
         #map-container {
             flex-grow: 1;
-            position: relative;
+            height: 100%;
         }
 
-        #map {
+        /* Estilo del iframe para ocupar toda la pantalla */
+        #map-frame {
             width: 100%;
             height: 100%;
+            border: none;
         }
     </style>
 </head>
@@ -76,75 +78,52 @@
     <div id="sidebar">
         <h2>Dispositivos Activos</h2>
         
-        <div class="dispositivo-card" onclick="enfocarDispositivo('lora1')">
-            <h3>LORA 1 (GPS)</h3>
-            <p>Lat: --.------</p>
-            <p>Lon: --.------</p>
+        <div class="dispositivo-card" onclick="cambiarUbicacion('-0.1807,-78.4678', 'mapa')">
+            <h3>LORA 1 (Ver Mapa)</h3>
+            <p>Ubicación: Centro</p>
         </div>
 
-        <div class="dispositivo-card" onclick="enfocarDispositivo('lora2')">
-            <h3>LORA 2 (GPS)</h3>
-            <p>Lat: --.------</p>
-            <p>Lon: --.------</p>
+        <div class="dispositivo-card" onclick="cambiarUbicacion('-0.1807,-78.4678', 'streetview')">
+            <h3>LORA 1 (Ver Street View)</h3>
+            <p>Vista de calle interactiva</p>
         </div>
 
-        <div class="dispositivo-card" onclick="enfocarDispositivo('lora3')">
-            <h3>LORA 3 (GPS)</h3>
-            <p>Lat: --.------</p>
-            <p>Lon: --.------</p>
+        <div class="dispositivo-card" onclick="cambiarUbicacion('-0.1900,-78.4700', 'mapa')">
+            <h3>LORA 2 (Ver Mapa)</h3>
+            <p>Ubicación: Norte</p>
         </div>
 
-        <div class="dispositivo-card" onclick="enfocarDispositivo('lily1')">
+        <div class="dispositivo-card" onclick="cambiarUbicacion('-0.1750,-78.4600', 'mapa')">
+            <h3>LORA 3 (Ver Mapa)</h3>
+            <p>Ubicación: Sur</p>
+        </div>
+
+        <div class="dispositivo-card" onclick="alert('Este dispositivo no cuenta con módulo GPS activo.')">
             <h3>Lilygo 1</h3>
             <p>Estado: Conectado</p>
         </div>
 
-        <div class="dispositivo-card" onclick="enfocarDispositivo('lily2')">
+        <div class="dispositivo-card" onclick="alert('Este dispositivo no cuenta con módulo GPS activo.')">
             <h3>Lilygo 2</h3>
             <p>Estado: Conectado</p>
         </div>
     </div>
 
     <div id="map-container">
-        <div id="map"></div>
+        <iframe id="map-frame" src="https://maps.google.com/maps?q=-0.1807,-78.4678&t=&z=15&ie=UTF8&iwloc=&output=embed"></iframe>
     </div>
 
-    <script src="https://maps.googleapis.com/maps/api/js?key=TU_API_KEY&callback=initMap" async defer></script>
-
     <script>
-        let map;
-        // Coordenadas simuladas iniciales para los 3 nodos GPS
-        const ubicaciones = {
-            lora1: { lat: -0.1807, lng: -78.4678, nombre: "Nodo LORA 1" },
-            lora2: { lat: -0.1900, lng: -78.4700, nombre: "Nodo LORA 2" },
-            lora3: { lat: -0.1750, lng: -78.4600, nombre: "Nodo LORA 3" }
-        };
-
-        function initMap() {
-            // Inicializa el mapa centrado en una ubicación por defecto
-            map = new google.maps.Map(document.getElementById("map"), {
-                zoom: 14,
-                center: ubicaciones.lora1, 
-                mapTypeId: 'roadmap' // Puedes cambiarlo a 'satellite' o usar Street View
-            });
-
-            // Colocar marcadores en el mapa para los nodos GPS
-            for (let nodo in ubicaciones) {
-                new google.maps.Marker({
-                    position: { lat: ubicaciones[nodo].lat, lng: ubicaciones[nodo].lng },
-                    map: map,
-                    title: ubicaciones[nodo].nombre
-                });
-            }
-        }
-
-        // Función para que el usuario haga clic en la lista y el mapa se mueva al dispositivo
-        function enfocarDispositivo(id) {
-            if (ubicaciones[id]) {
-                map.setCenter(ubicaciones[id]);
-                map.setZoom(16);
-            } else {
-                alert("El dispositivo seleccionado no cuenta con módulo GPS activo.");
+        // Función para actualizar el mapa/streetview sin recargar la página
+        function cambiarUbicacion(coordenadas, tipo) {
+            const iframe = document.getElementById('map-frame');
+            
+            if (tipo === 'mapa') {
+                // Genera el mapa estándar centrado en las coordenadas
+                iframe.src = `https://maps.google.com/maps?q=${coordenadas}&t=&z=16&ie=UTF8&iwloc=&output=embed`;
+            } else if (tipo === 'streetview') {
+                // Activa la vista de Street View (satélite/calle si está disponible) en esas coordenadas
+                iframe.src = `https://maps.google.com/maps?q=${coordenadas}&layer=c&cbll=${coordenadas}&cbp=12,0,0,0,0&source=browser&ie=UTF8&output=embed`;
             }
         }
     </script>
