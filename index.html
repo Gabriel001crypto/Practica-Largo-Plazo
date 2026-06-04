@@ -18,7 +18,6 @@
             background-color: #f4f6f9;
         }
 
-        /* Panel Lateral */
         #sidebar {
             width: 300px;
             background-color: #1e293b;
@@ -59,13 +58,11 @@
             color: #cbd5e1;
         }
 
-        /* Contenedor del Mapa */
         #map-container {
             flex-grow: 1;
             height: 100%;
         }
 
-        /* Estilo del iframe para ocupar toda la pantalla */
         #map-frame {
             width: 100%;
             height: 100%;
@@ -78,54 +75,82 @@
     <div id="sidebar">
         <h2>Dispositivos Activos</h2>
         
-        <div class="dispositivo-card" onclick="cambiarUbicacion('-0.1807,-78.4678', 'mapa')">
+        <div class="dispositivo-card" onclick="cargarUbicacionNodo('lora1', 'mapa')">
             <h3>LORA 1 (Ver Mapa)</h3>
-            <p>Ubicación: Centro</p>
+            <p id="lora1-info">Cargando datos...</p>
         </div>
-
-        <div class="dispositivo-card" onclick="cambiarUbicacion('-0.1807,-78.4678', 'streetview')">
-            <h3>LORA 1 (Ver Street View)</h3>
+        <div class="dispositivo-card" onclick="cargarUbicacionNodo('lora1', 'streetview')">
+            <h3>LORA 1 (Street View)</h3>
             <p>Vista de calle interactiva</p>
         </div>
 
-        <div class="dispositivo-card" onclick="cambiarUbicacion('-0.1900,-78.4700', 'mapa')">
+        <div class="dispositivo-card" onclick="cargarUbicacionNodo('lora2', 'mapa')">
             <h3>LORA 2 (Ver Mapa)</h3>
-            <p>Ubicación: Norte</p>
+            <p id="lora2-info">Cargando datos...</p>
         </div>
 
-        <div class="dispositivo-card" onclick="cambiarUbicacion('-0.1750,-78.4600', 'mapa')">
+        <div class="dispositivo-card" onclick="cargarUbicacionNodo('lora3', 'mapa')">
             <h3>LORA 3 (Ver Mapa)</h3>
-            <p>Ubicación: Sur</p>
+            <p id="lora3-info">Cargando datos...</p>
         </div>
 
-        <div class="dispositivo-card" onclick="alert('Este dispositivo no cuenta con módulo GPS activo.')">
+        <div class="dispositivo-card">
             <h3>Lilygo 1</h3>
-            <p>Estado: Conectado</p>
+            <p id="lily1-info">Estado: --</p>
         </div>
 
-        <div class="dispositivo-card" onclick="alert('Este dispositivo no cuenta con módulo GPS activo.')">
+        <div class="dispositivo-card">
             <h3>Lilygo 2</h3>
-            <p>Estado: Conectado</p>
+            <p id="lily2-info">Estado: --</p>
         </div>
     </div>
 
     <div id="map-container">
-        <iframe id="map-frame" src="https://maps.google.com/maps?q=-0.1807,-78.4678&t=&z=15&ie=UTF8&iwloc=&output=embed"></iframe>
+        <iframe id="map-frame" src="about:blank"></iframe>
     </div>
 
     <script>
-        // Función para actualizar el mapa/streetview sin recargar la página
-        function cambiarUbicacion(coordenadas, tipo) {
-            const iframe = document.getElementById('map-frame');
-            
-            if (tipo === 'mapa') {
-                // Genera el mapa estándar centrado en las coordenadas
-                iframe.src = `https://maps.google.com/maps?q=${coordenadas}&t=&z=16&ie=UTF8&iwloc=&output=embed`;
-            } else if (tipo === 'streetview') {
-                // Activa la vista de Street View (satélite/calle si está disponible) en esas coordenadas
-                iframe.src = `https://maps.google.com/maps?q=${coordenadas}&layer=c&cbll=${coordenadas}&cbp=12,0,0,0,0&source=browser&ie=UTF8&output=embed`;
+        let datosSensores = {};
+
+        // Función para consumir el archivo JSON de tu repositorio
+        async function obtenerDatos() {
+            try {
+                // Al usar './datos.json' lee el archivo que está en tu mismo GitHub Pages
+                const respuesta = await fetch('./datos.json?t=' + new Date().getTime()); // El token evita el caché
+                datosSensores = await respuesta.json();
+                
+                // Actualizar los textos del panel lateral con los datos reales del JSON
+                document.getElementById('lora1-info').innerText = datosSensores.lora1.info + " [" + datosSensores.lora1.coordenadas + "]";
+                document.getElementById('lora2-info').innerText = datosSensores.lora2.info + " [" + datosSensores.lora2.coordenadas + "]";
+                document.getElementById('lora3-info').innerText = datosSensores.lora3.info + " [" + datosSensores.lora3.coordenadas + "]";
+                document.getElementById('lily1-info').innerText = "Estado: " + datosSensores.lily1.estado + " | Bat: " + datosSensores.lily1.bateria;
+                document.getElementById('lily2-info').innerText = "Estado: " + datosSensores.lily2.estado + " | Bat: " + datosSensores.lily2.bateria;
+
+            } catch (error) {
+                console.error("Error leyendo el archivo de datos:", error);
             }
         }
+
+        // Función que interactúa con el iframe interactivo de Google Maps
+        function cargarUbicacionNodo(id, tipo) {
+            const iframe = document.getElementById('map-frame');
+            if (datosSensores[id] && datosSensores[id].coordenadas) {
+                const coord = datosSensores[id].coordenadas;
+                if (tipo === 'mapa') {
+                    iframe.src = `https://maps.google.com/maps?q=${coord}&t=&z=16&ie=UTF8&iwloc=&output=embed`;
+                } else if (tipo === 'streetview') {
+                    iframe.src = `https://maps.google.com/maps?q=${coord}&layer=c&cbll=${coord}&cbp=12,0,0,0,0&source=browser&ie=UTF8&output=embed`;
+                }
+            } else {
+                alert("Este dispositivo no cuenta con coordenadas de localización.");
+            }
+        }
+
+        // Cargar datos inmediatamente al abrir la página
+        obtenerDatos();
+        
+        // Revisar si hay nuevos datos automáticamente cada 5 segundos
+        setInterval(obtenerDatos, 5000);
     </script>
 </body>
 </html>
