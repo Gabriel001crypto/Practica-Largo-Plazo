@@ -19,20 +19,22 @@
         }
 
         #sidebar {
-            width: 300px;
+            width: 320px;
             background-color: #1e293b;
             color: #ffffff;
             padding: 20px;
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 15px;
             box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            overflow-y: auto;
         }
 
         #sidebar h2 {
             font-size: 1.2rem;
             border-bottom: 2px solid #38bdf8;
             padding-bottom: 10px;
+            margin-bottom: 5px;
         }
 
         .dispositivo-card {
@@ -40,11 +42,12 @@
             padding: 15px;
             border-radius: 8px;
             cursor: pointer;
-            transition: background 0.3s;
+            transition: background 0.3s, transform 0.2s;
         }
 
         .dispositivo-card:hover {
             background-color: #475569;
+            transform: scale(1.02);
         }
 
         .dispositivo-card h3 {
@@ -56,6 +59,7 @@
         .dispositivo-card p {
             font-size: 0.85rem;
             color: #cbd5e1;
+            margin-top: 3px;
         }
 
         #map-container {
@@ -77,31 +81,31 @@
         
         <div class="dispositivo-card" onclick="cargarUbicacionNodo('lora1', 'mapa')">
             <h3>LORA 1 (Ver Mapa)</h3>
-            <p id="lora1-info">Cargando datos...</p>
+            <p id="lora1-info">Cargando...</p>
         </div>
         <div class="dispositivo-card" onclick="cargarUbicacionNodo('lora1', 'streetview')">
             <h3>LORA 1 (Street View)</h3>
-            <p>Vista de calle interactiva</p>
+            <p>Ver entorno real de calle</p>
         </div>
 
         <div class="dispositivo-card" onclick="cargarUbicacionNodo('lora2', 'mapa')">
             <h3>LORA 2 (Ver Mapa)</h3>
-            <p id="lora2-info">Cargando datos...</p>
+            <p id="lora2-info">Cargando...</p>
         </div>
 
         <div class="dispositivo-card" onclick="cargarUbicacionNodo('lora3', 'mapa')">
             <h3>LORA 3 (Ver Mapa)</h3>
-            <p id="lora3-info">Cargando datos...</p>
+            <p id="lora3-info">Cargando...</p>
         </div>
 
         <div class="dispositivo-card" onclick="cargarUbicacionNodo('lily1', 'mapa')">
-            <h3>Lilygo 1 (Probar Mapa)</h3>
-            <p id="lily1-info">Estado: --</p>
+            <h3>Lilygo 1 (Ver Mapa)</h3>
+            <p id="lily1-info">Cargando...</p>
         </div>
 
         <div class="dispositivo-card" onclick="cargarUbicacionNodo('lily2', 'mapa')">
-            <h3>Lilygo 2 (Probar Mapa)</h3>
-            <p id="lily2-info">Estado: --</p>
+            <h3>Lilygo 2 (Ver Mapa)</h3>
+            <p id="lily2-info">Cargando...</p>
         </div>
     </div>
 
@@ -112,45 +116,50 @@
     <script>
         let datosSensores = {};
 
-        // Función para consumir el archivo JSON de tu repositorio
+        // Función para leer el JSON real de tu repositorio
         async function obtenerDatos() {
             try {
-                // Al usar './datos.json' lee el archivo que está en tu mismo GitHub Pages
-                const respuesta = await fetch('./datos.json?t=' + new Date().getTime()); // El token evita el caché
+                // Hacemos la petición al archivo datos.json agregando un número aleatorio para evitar que el navegador guarde caché viejo
+                const respuesta = await fetch('./datos.json?t=' + new Date().getTime());
                 datosSensores = await respuesta.json();
                 
-                // Actualizar los textos del panel lateral con los datos reales del JSON
-                document.getElementById('lora1-info').innerText = datosSensores.lora1.info + " [" + datosSensores.lora1.coordenadas + "]";
-                document.getElementById('lora2-info').innerText = datosSensores.lora2.info + " [" + datosSensores.lora2.coordenadas + "]";
-                document.getElementById('lora3-info').innerText = datosSensores.lora3.info + " [" + datosSensores.lora3.coordenadas + "]";
-                document.getElementById('lily1-info').innerText = "Estado: " + datosSensores.lily1.estado + " | Bat: " + datosSensores.lily1.bateria;
-                document.getElementById('lily2-info').innerText = "Estado: " + datosSensores.lily2.estado + " | Bat: " + datosSensores.lily2.bateria;
+                // Pintamos los datos reales del JSON en las tarjetas del panel lateral
+                document.getElementById('lora1-info').innerHTML = `Coord: ${datosSensores.lora1.coordenadas}<br><em>${datosSensores.lora1.info}</em>`;
+                document.getElementById('lora2-info').innerHTML = `Coord: ${datosSensores.lora2.coordenadas}<br><em>${datosSensores.lora2.info}</em>`;
+                document.getElementById('lora3-info').innerHTML = `Coord: ${datosSensores.lora3.coordenadas}<br><em>${datosSensores.lora3.info}</em>`;
+                
+                document.getElementById('lily1-info').innerHTML = `Coord: ${datosSensores.lily1.coordenadas}<br>Est: ${datosSensores.lily1.estado} | Bat: ${datosSensores.lily1.bateria}`;
+                document.getElementById('lily2-info').innerHTML = `Coord: ${datosSensores.lily2.coordenadas}<br>Est: ${datosSensores.lily2.estado} | Bat: ${datosSensores.lily2.bateria}`;
 
             } catch (error) {
-                console.error("Error leyendo el archivo de datos:", error);
+                console.error("Error leyendo el archivo JSON:", error);
             }
         }
 
-        // Función que interactúa con el iframe interactivo de Google Maps
+        // Función para renderizar el mapa dinámicamente con la variable correcta (${coord})
         function cargarUbicacionNodo(id, tipo) {
             const iframe = document.getElementById('map-frame');
+            
             if (datosSensores[id] && datosSensores[id].coordenadas) {
                 const coord = datosSensores[id].coordenadas;
+                
                 if (tipo === 'mapa') {
+                    // Carga el mapa de Google estándar con las coordenadas reales
                     iframe.src = `https://maps.google.com/maps?q=${coord}&t=&z=16&ie=UTF8&iwloc=&output=embed`;
                 } else if (tipo === 'streetview') {
+                    // Carga el entorno de Street View interactivo real
                     iframe.src = `https://maps.google.com/maps?q=${coord}&layer=c&cbll=${coord}&cbp=12,0,0,0,0&source=browser&ie=UTF8&output=embed`;
                 }
             } else {
-                alert("Este dispositivo no cuenta con coordenadas de localización.");
+                alert("Este dispositivo no tiene coordenadas válidas en el JSON.");
             }
         }
 
-        // Cargar datos inmediatamente al abrir la página
+        // Ejecución automática al cargar la web
         obtenerDatos();
         
-        // Revisar si hay nuevos datos automáticamente cada 5 segundos
-        setInterval(obtenerDatos, 5000);
+        // Refrescar datos automáticamente en segundo plano cada 4 segundos
+        setInterval(obtenerDatos, 4000);
     </script>
 </body>
 </html>
