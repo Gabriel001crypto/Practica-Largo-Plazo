@@ -13,10 +13,12 @@
   },
   "lily1": {
     "estado": "Conectado",
-    "bateria": "85%"
+    "bateria": "85%",
+    "coordenadas": "-0.1830,-78.4810"
   },
   "lily2": {
-    "estado": "Desconectado",
-    "bateria": "0%"
+    "estado": "Conectado",
+    "bateria": "92%",
+    "coordenadas": "-0.2010,-78.4930"
   }
 }
