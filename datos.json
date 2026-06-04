@@ -1,0 +1,22 @@
+{
+  "lora1": {
+    "coordenadas": "-0.1807,-78.4678",
+    "info": "Nodo 1 - Activo con GPS"
+  },
+  "lora2": {
+    "coordenadas": "-0.1900,-78.4700",
+    "info": "Nodo 2 - Activo con GPS"
+  },
+  "lora3": {
+    "coordenadas": "-0.1750,-78.4600",
+    "info": "Nodo 3 - Activo con GPS"
+  },
+  "lily1": {
+    "estado": "Conectado",
+    "bateria": "85%"
+  },
+  "lily2": {
+    "estado": "Desconectado",
+    "bateria": "0%"
+  }
+}
