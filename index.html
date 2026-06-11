@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monitoreo LoRa - Paquetes en Tiempo Real</title>
+    <title>Panel de Control LoRa - Tiempo Real</title>
     <style>
         * {
             box-sizing: border-box;
@@ -13,141 +13,105 @@
         }
 
         body {
-            display: flex;
-            height: 100vh;
-            background-color: #f4f6f9;
-        }
-
-        #sidebar {
-            width: 320px;
-            background-color: #1e293b;
-            color: #ffffff;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
-            overflow-y: auto;
-        }
-
-        #sidebar h2 {
-            font-size: 1.2rem;
-            border-bottom: 2px solid #38bdf8;
-            padding-bottom: 10px;
-            margin-bottom: 5px;
-        }
-
-        .dispositivo-card {
-            background-color: #334155;
-            padding: 15px;
-            border-radius: 8px;
-            border-left: 5px solid #38bdf8;
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-
-        .nodo-gabriel {
-            border-left-color: #22c55e;
             background-color: #0f172a;
+            color: #f8fafc;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
         }
 
-        .dispositivo-card h3 {
-            font-size: 1rem;
+        h1 {
+            font-size: 2.2rem;
             color: #38bdf8;
+            margin-bottom: 5px;
+            text-align: center;
         }
 
-        .nodo-gabriel h3 {
+        .subtitle {
+            color: #94a3b8;
+            margin-bottom: 40px;
+            font-size: 1rem;
+        }
+
+        #dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            width: 100%;
+            max-width: 1100px;
+        }
+
+        .card {
+            background-color: #1e293b;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+            border-top: 6px solid #22c55e;
+            transition: transform 0.2s;
+        }
+
+        .card h2 {
+            font-size: 1.4rem;
+            color: #f1f5f9;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .metric {
+            margin-top: 15px;
+            background-color: #0f172a;
+            padding: 20px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .metric span.label {
+            color: #94a3b8;
+            font-size: 1rem;
+        }
+
+        .metric span.value {
+            font-size: 2.2rem;
+            font-weight: bold;
             color: #22c55e;
         }
 
-        .dispositivo-card p {
-            font-size: 0.9rem;
-            color: #cbd5e1;
-        }
-
-        .packet-count {
-            font-size: 1.4rem !important;
-            font-weight: bold;
-            color: #ffffff;
-            margin-top: 5px;
-        }
-
-        #map-container {
-            flex-grow: 1;
-            height: 100%;
-        }
-
-        #map-frame {
-            width: 100%;
-            height: 100%;
-            border: none;
+        .status-online {
+            width: 12px;
+            height: 12px;
+            background-color: #22c55e;
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 8px #22c55e;
         }
     </style>
 </head>
 <body>
 
-    <div id="sidebar">
-        <h2>Nodos Activos LoRa</h2>
-        
-        <div class="dispositivo-card nodo-gabriel">
-            <h3>📡 NODO: GABRIEL</h3>
-            <p>Paquetes Recibidos:</p>
-            <p class="packet-count" id="p-gabriel">0</p>
+    <h1>📡 Sistema de Monitoreo de Paquetes LoRa</h1>
+    <p class="subtitle">Datos procesados en tiempo real desde el Live Inspector de TagoIO</p>
+
+    <div id="dashboard">
+        <div class="card">
+            <h2><span class="status-online"></span> GABRIEL</h2>
+            <div class="metric">
+                <span class="label">Paquetes Recibidos:</span>
+                <span class="value" id="p-gabriel">0</span>
+            </div>
         </div>
 
-        <div class="dispositivo-card" style="border-left-color: #a855f7;">
-            <h3>📡 NODO: JIMMY LORA 32</h3>
-            <p>Paquetes Recibidos:</p>
-            <p class="packet-count" id="p-jimmy">0</p>
+        <div class="card" style="border-top-color: #a855f7;">
+            <h2><span class="status-online"></span> JIMMY LORA 32</h2>
+            <div class="metric">
+                <span class="label">Paquetes Recibidos:</span>
+                <span class="value" id="p-jimmy" style="color: #a855f7;">0</span>
+            </div>
         </div>
 
-        <div class="dispositivo-card" style="border-left-color: #f97316;">
-            <h3>📡 NODO: AUGUSTO HELTEC</h3>
-            <p>Paquetes Recibidos:</p>
-            <p class="packet-count" id="p-augusto">0</p>
-        </div>
-    </div>
-
-    <div id="map-container">
-        <iframe id="map-frame" src="http://googleusercontent.com/maps.google.com/4"></iframe>
-    </div>
-
-    <script>
-        // Esta función lee el texto "Sensor=Activo,Paquete=193" que manda TagoIO y extrae solo el número
-        function extraerNumeroPaquete(nodo) {
-            if (!nodo) return '0';
-            if (nodo.paquetes) return nodo.paquetes;
-            
-            const texto = nodo.info || nodo.estado || '';
-            const coincidencia = texto.match(/Paquete=(\d+)/);
-            return coincidencia ? coincidencia[1] : '0';
-        }
-
-        async function obtenerPaquetes() {
-            try {
-                // Hacemos la petición al JSON rompiendo la caché
-                const respuesta = await fetch('./datos.json?t=' + new Date().getTime());
-                const datos = await respuesta.json();
-                
-                // Vinculamos de forma exacta con las llaves actuales de tu datos.json de GitHub
-                const gabrielData = datos.GABRIEL || datos.Gabriel;
-                const jimmyData = datos.lora2 || datos.JimmyLora32;
-                const augustoData = datos.lora3 || datos.AUGUSTO_HELTEC;
-
-                // Pintamos los números extraídos en la interfaz web
-                document.getElementById('p-gabriel').innerText = extraerNumeroPaquete(gabrielData);
-                document.getElementById('p-jimmy').innerText = extraerNumeroPaquete(jimmyData);
-                document.getElementById('p-augusto').innerText = extraerNumeroPaquete(augustoData);
-
-            } catch (error) {
-                console.error("Buscando actualizaciones de datos LoRa...", error);
-            }
-        }
-
-        // Ejecutar al cargar la página y revisar cambios cada 3 segundos
-        obtenerPaquetes();
-        setInterval(obtenerPaquetes, 3000);
-    </script>
-</body>
-</html>
+        <div class="card" style="border-top-
