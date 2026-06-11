@@ -45,10 +45,10 @@
             transition: background 0.3s, transform 0.2s;
         }
 
-        /* Color especial para tu botón de GPS Real */
-        .gps-real-card {
-            background-color: #0284c7;
-            border: 2px solid #38bdf8;
+        /* Diseño destacado para tu tarjeta real */
+        .nodo-real-card {
+            background-color: #0f172a;
+            border-left: 5px solid #22c55e;
         }
 
         .dispositivo-card:hover {
@@ -62,14 +62,15 @@
             margin-bottom: 5px;
         }
 
-        .gps-real-card h3 {
-            color: #ffffff;
+        .nodo-real-card h3 {
+            color: #22c55e;
         }
 
         .dispositivo-card p {
             font-size: 0.85rem;
             color: #cbd5e1;
             margin-top: 3px;
+            line-height: 1.3rem;
         }
 
         #map-container {
@@ -87,38 +88,28 @@
 <body>
 
     <div id="sidebar">
-        <h2>Mi Ubicación Real</h2>
+        <h2>Transmisión Real LoRa</h2>
         
-        <div class="dispositivo-card gps-real-card" onclick="obtenerGPSDispositivo()">
-            <h3>📍 Mi Ubicación Real (GPS)</h3>
-            <p id="mi-gps-info">Haz clic para activar tu GPS</p>
+        <div class="dispositivo-card nodo-real-card" onclick="cargarUbicacionNodo('Gabriel')">
+            <h3>📡 Nodo: GABRIEL</h3>
+            <p id="gabriel-info">Esperando datos del T-Beam...</p>
         </div>
 
-        <h2>Dispositivos del Proyecto</h2>
+        <h2>Simuladores de Respaldo</h2>
         
-        <div class="dispositivo-card" onclick="cargarUbicacionNodo('lora1', 'mapa')">
-            <h3>LORA 1 (Ver Mapa)</h3>
+        <div class="dispositivo-card" onclick="cargarUbicacionNodo('lora1')">
+            <h3>LORA 1</h3>
             <p id="lora1-info">Cargando...</p>
         </div>
 
-        <div class="dispositivo-card" onclick="cargarUbicacionNodo('lora2', 'mapa')">
-            <h3>LORA 2 (Ver Mapa)</h3>
+        <div class="dispositivo-card" onclick="cargarUbicacionNodo('lora2')">
+            <h3>LORA 2</h3>
             <p id="lora2-info">Cargando...</p>
         </div>
 
-        <div class="dispositivo-card" onclick="cargarUbicacionNodo('lora3', 'mapa')">
-            <h3>LORA 3 (Ver Mapa)</h3>
-            <p id="lora3-info">Cargando...</p>
-        </div>
-
-        <div class="dispositivo-card" onclick="cargarUbicacionNodo('lily1', 'mapa')">
-            <h3>Lilygo 1 (Ver Mapa)</h3>
+        <div class="dispositivo-card" onclick="cargarUbicacionNodo('lily1')">
+            <h3>Lilygo Estática 1</h3>
             <p id="lily1-info">Cargando...</p>
-        </div>
-
-        <div class="dispositivo-card" onclick="cargarUbicacionNodo('lily2', 'mapa')">
-            <h3>Lilygo 2 (Ver Mapa)</h3>
-            <p id="lily2-info">Cargando...</p>
         </div>
     </div>
 
@@ -129,61 +120,52 @@
     <script>
         let datosSensores = {};
 
-        // 1. FUNCIÓN PARA TU GPS REAL (CUENCA)
-        function obtenerGPSDispositivo() {
-            const txtInfo = document.getElementById('mi-gps-info');
-            const iframe = document.getElementById('map-frame');
-
-            if (navigator.geolocation) {
-                txtInfo.innerText = "Buscando satélites...";
-                
-                // Esto lee el hardware GPS de tu máquina/teléfono en vivo
-                navigator.geolocation.getCurrentPosition(function(position) {
-                    const lat = position.coords.latitude;
-                    const lon = position.coords.longitude;
-                    const misCoordenadas = `${lat},${lon}`;
-                    
-                    txtInfo.innerHTML = `<strong>Detectado:</strong><br>${misCoordenadas}`;
-                    
-                    // Renderiza el mapa gratuito de Google centrado exactamente donde estás tú
-                    iframe.src = `https://maps.google.com/maps?q=${misCoordenadas}&t=&z=16&ie=UTF8&iwloc=&output=embed`;
-                    
-                }, function(error) {
-                    txtInfo.innerText = "Error: Permiso de GPS denegado.";
-                    alert("Por favor, acepta el permiso de ubicación del navegador.");
-                });
-            } else {
-                alert("Tu navegador no soporta geolocalización.");
-            }
-        }
-
-        // 2. FUNCIÓN PARA LEER EL JSON (LOS DISPOSITIVOS)
         async function obtenerDatos() {
             try {
+                // Hacemos el fetch al JSON rompiendo el caché del navegador
                 const respuesta = await fetch('./datos.json?t=' + new Date().getTime());
                 datosSensores = await respuesta.json();
                 
-                document.getElementById('lora1-info').innerHTML = `Coord: ${datosSensores.lora1.coordenadas}`;
-                document.getElementById('lora2-info').innerHTML = `Coord: ${datosSensores.lora2.coordenadas}`;
-                document.getElementById('lora3-info').innerHTML = `Coord: ${datosSensores.lora3.coordenadas}`;
-                document.getElementById('lily1-info').innerHTML = `Est: ${datosSensores.lily1.estado} | Bat: ${datosSensores.lily1.bateria}`;
-                document.getElementById('lily2-info').innerHTML = `Est: ${datosSensores.lily2.estado} | Bat: ${datosSensores.lily2.bateria}`;
+                // 1. Inyectamos los datos del receptor de tu compañero para tu nodo
+                if (datosSensores.Gabriel) {
+                    document.getElementById('gabriel-info').innerHTML = `
+                        <strong>Estado:</strong> ${datosSensores.Gabriel.estado || 'Activo'}<br>
+                        <strong>Paquetes:</strong> ${datosSensores.Gabriel.paquetes || '0'}<br>
+                        <strong>Calidad RSSI:</strong> ${datosSensores.Gabriel.rssi || '--'} dBm<br>
+                        <span style="color:#22c55e; font-size:0.75rem;">Ubicación: ${datosSensores.Gabriel.coordenadas}</span>
+                    `;
+                }
+
+                // 2. Datos complementarios de la lista
+                document.getElementById('lora1-info').innerText = `Coord: ${datosSensores.lora1?.coordenadas || '0.0,0.0'}`;
+                document.getElementById('lora2-info').innerText = `Coord: ${datosSensores.lora2?.coordenadas || '0.0,0.0'}`;
+                document.getElementById('lily1-info').innerText = `Coord: ${datosSensores.lily1?.coordenadas || '0.0,0.0'}`;
 
             } catch (error) {
-                console.error("Error leyendo el archivo JSON:", error);
+                console.error("Error al procesar los datos JSON de los dispositivos:", error);
             }
         }
 
-        function cargarUbicacionNodo(id, tipo) {
+        function cargarUbicacionNodo(id) {
             const iframe = document.getElementById('map-frame');
+            
             if (datosSensores[id] && datosSensores[id].coordenadas) {
                 const coord = datosSensores[id].coordenadas;
+                
+                // Si está en 0.0,0.0 alertamos que falta el GPS
+                if(coord === "0.0,0.0" || coord === "0,0") {
+                    alert("El nodo no ha adquirido coordenadas válidas del satélite aún.");
+                    return;
+                }
+                
+                // Renderizado dinámico del mapa sin errores de API Key
                 iframe.src = `https://maps.google.com/maps?q=${coord}&t=&z=16&ie=UTF8&iwloc=&output=embed`;
             } else {
-                alert("Este dispositivo no tiene coordenadas válidas.");
+                alert("Este dispositivo no se encuentra registrado en el JSON.");
             }
         }
 
+        // Ejecución automática inicial y refresco cada 4 segundos
         obtenerDatos();
         setInterval(obtenerDatos, 4000);
     </script>
