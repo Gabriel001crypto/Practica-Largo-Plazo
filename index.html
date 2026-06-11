@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel de Monitoreo LoRaWAN - Tiempo Real</title>
+    <title>Panel de Monitoreo LoRa - Paquetes</title>
     <style>
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
         }
 
         body {
@@ -48,12 +48,8 @@
             border-radius: 12px;
             padding: 25px;
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
-            border-top: 6px solid #38bdf8;
+            border-top: 6px solid #22c55e;
             transition: transform 0.2s;
-        }
-
-        .card:hover {
-            transform: translateY(-5px);
         }
 
         .card h2 {
@@ -68,7 +64,7 @@
         .metric {
             margin-top: 15px;
             background-color: #0f172a;
-            padding: 12px;
+            padding: 15px;
             border-radius: 8px;
             display: flex;
             justify-content: space-between;
@@ -77,18 +73,13 @@
 
         .metric span.label {
             color: #94a3b8;
-            font-size: 0.9rem;
+            font-size: 1rem;
         }
 
         .metric span.value {
-            font-size: 1.5rem;
+            font-size: 2rem;
             font-weight: bold;
             color: #22c55e;
-        }
-
-        .rssi-value {
-            color: #eab308 !important;
-            font-size: 1.1rem !important;
         }
 
         .status-online {
@@ -103,80 +94,68 @@
 </head>
 <body>
 
-    <h1>📡 Sistema de Monitoreo de Red LoRa</h1>
-    <p class="subtitle">Capa de Aplicación - Datos en tiempo real desde TagoIO</p>
+    <h1>📡 Monitoreo de Paquetes LoRa</h1>
+    <p class="subtitle">Capa de Aplicación - Dispositivos detectados en tiempo real</p>
 
-    <div id="dashboard">
+    <div id="dashboard" id="contenedor-nodos">
+        <!-- Tarjeta Dispositivo: Gabriel -->
         <div class="card">
             <h2><span class="status-online"></span> GABRIEL</h2>
             <div class="metric">
-                <span class="label">Nº Paquetes:</span>
+                <span class="label">Paquetes Recibidos:</span>
                 <span class="value" id="p-gabriel">0</span>
-            </div>
-            <div class="metric">
-                <span class="label">Señal (RSSI):</span>
-                <span class="value rssi-value" id="r-gabriel">-- dBm</span>
             </div>
         </div>
 
+        <!-- Tarjeta Dispositivo: JimmyLora32 -->
         <div class="card" style="border-top-color: #a855f7;">
             <h2><span class="status-online"></span> JIMMY LORA 32</h2>
             <div class="metric">
-                <span class="label">Nº Paquetes:</span>
+                <span class="label">Paquetes Recibidos:</span>
                 <span class="value" id="p-jimmy" style="color: #a855f7;">0</span>
-            </div>
-            <div class="metric">
-                <span class="label">Señal (RSSI):</span>
-                <span class="value rssi-value" id="r-jimmy">-- dBm</span>
             </div>
         </div>
 
+        <!-- Tarjeta Dispositivo: Augusto -->
         <div class="card" style="border-top-color: #f97316;">
             <h2><span class="status-online"></span> AUGUSTO HELTEC</h2>
             <div class="metric">
-                <span class="label">Nº Paquetes:</span>
+                <span class="label">Paquetes Recibidos:</span>
                 <span class="value" id="p-augusto" style="color: #f97316;">0</span>
-            </div>
-            <div class="metric">
-                <span class="label">Señal (RSSI):</span>
-                <span class="value rssi-value" id="r-augusto">-- dBm</span>
             </div>
         </div>
     </div>
 
     <script>
-        async function actualizarDashboard() {
+        async function actualizarPaquetes() {
             try {
-                // Petición al JSON rompiendo el caché para tiempo real estricto
+                // Hacemos el fetch al JSON rompiendo el caché del navegador
                 const respuesta = await fetch('./datos.json?t=' + new Date().getTime());
                 const datos = await respuesta.json();
 
-                // Actualizar Dispositivo: Gabriel
+                // Extraer y mostrar paquetes de Gabriel
                 if (datos.Gabriel) {
                     document.getElementById('p-gabriel').innerText = datos.Gabriel.paquetes || '0';
-                    document.getElementById('r-gabriel').innerText = (datos.Gabriel.rssi || '--') + ' dBm';
                 }
 
-                // Actualizar Dispositivo: JimmyLora32
+                // Extraer y mostrar paquetes de JimmyLora32
                 if (datos.JimmyLora32) {
                     document.getElementById('p-jimmy').innerText = datos.JimmyLora32.paquetes || '0';
-                    document.getElementById('r-jimmy').innerText = (datos.JimmyLora32.rssi || '--') + ' dBm';
                 }
 
-                // Actualizar Dispositivo: AUGUSTO_HELTEC
+                // Extraer y mostrar paquetes de AUGUSTO_HELTEC
                 if (datos.AUGUSTO_HELTEC) {
                     document.getElementById('p-augusto').innerText = datos.AUGUSTO_HELTEC.paquetes || '0';
-                    document.getElementById('r-augusto').innerText = (datos.AUGUSTO_HELTEC.rssi || '--') + ' dBm';
                 }
 
             } catch (error) {
-                console.error("Esperando actualización de datos desde TagoIO...", error);
+                console.error("Esperando datos de la API de TagoIO...", error);
             }
         }
 
-        // Ejecutar inmediatamente y luego cada 3 segundos
-        actualizarDashboard();
-        setInterval(actualizarDashboard, 3000);
+        // Revisar cambios automáticamente cada 3 segundos
+        actualizarPaquetes();
+        setInterval(actualizarPaquetes, 3000);
     </script>
 </body>
 </html>
