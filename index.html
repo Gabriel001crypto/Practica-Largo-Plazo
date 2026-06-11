@@ -94,35 +94,47 @@
     </div>
 
     <script>
-        function procesarCadenaTago(nodo) {
+        // Función extractora: saca el número de paquete sin importar el formato de TagoIO
+        function procesarDatoTago(nodo) {
             if (!nodo) return '0';
-            if (nodo.paquetes !== undefined) return nodo.paquetes;
             
-            // Busca patrones como "Paquete=193" o números sueltos dentro del texto de TagoIO
-            const cadena = nodo.info || nodo.estado || nodo.datos || '';
-            const match = cadena.match(/Paquete=(\d+)/);
-            return match ? match[1] : '0';
+            // 1. Si TagoIO manda el número directo (ej: "paquetes": "193")
+            if (nodo.paquetes !== undefined && nodo.paquetes !== "") return nodo.paquetes;
+            
+            // 2. Extrae el texto donde sea que TagoIO guarde la cadena
+            const textoCualquiera = nodo.estado || nodo.info || nodo.datos || '';
+            
+            // 3. Si viene la cadena exacta de Tago "Sensor=Activo,Paquete=193"
+            const regexPaquete = textoCualquiera.match(/Paquete=(\d+)/);
+            if (regexPaquete) return regexPaquete[1];
+            
+            // 4. Si viene solo un número suelto dentro del texto
+            const regexNumeroSuelto = textoCualquiera.match(/\d+/);
+            return regexNumeroSuelto ? regexNumeroSuelto[0] : '0';
         }
 
         async function solicitarDatos() {
             try {
+                // Forzamos la actualización del JSON ignorando la caché del navegador
                 const res = await fetch('./datos.json?nocache=' + new Date().getTime());
                 const info = await res.json();
 
-                // Soporte elástico para llaves lora1, lora2, lora3 o nombres directos de tus capturas
-                const g = info.lora1 || info.GABRIEL || info.Gabriel;
-                const j = info.lora2 || info.JimmyLora32;
-                const a = info.lora3 || info.AUGUSTO_HELTEC;
+                // Mapeo flexible buscando por llaves (minúsculas, mayúsculas y nombres genéricos)
+                const g = info.Gabriel || info.GABRIEL || info.lora1;
+                const j = info.JimmyLora32 || info.lora2;
+                const a = info.AUGUSTO_HELTEC || info.lora3;
 
-                document.getElementById('p-gabriel').innerText = procesarCadenaTago(g);
-                document.getElementById('p-jimmy').innerText = procesarCadenaTago(j);
-                document.getElementById('p-augusto').innerText = procesarCadenaTago(a);
+                // Inyectamos el valor procesado en cada tarjeta
+                document.getElementById('p-gabriel').innerText = procesarDatoTago(g);
+                document.getElementById('p-jimmy').innerText = procesarDatoTago(j);
+                document.getElementById('p-augusto').innerText = procesarDatoTago(a);
             } catch (err) {
-                console.log("Sincronizando flujo...");
+                console.log("Esperando tramas válidas desde TagoIO...");
             }
         }
 
         solicitarDatos();
+        // Actualización en tiempo real ultra rápida cada 2.5 segundos
         setInterval(solicitarDatos, 2500);
     </script>
 </body>
