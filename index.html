@@ -3,113 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monitoreo de Nodos IoT - Capa de Aplicación</title>
+    <title>Monitoreo LoRa - Tiempo Real</title>
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        body {
-            display: flex;
-            height: 100vh;
-            background-color: #f4f6f9;
-        }
-
-        #sidebar {
-            width: 320px;
-            background-color: #1e293b;
-            color: #ffffff;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
-            overflow-y: auto;
-        }
-
-        #sidebar h2 {
-            font-size: 1.2rem;
-            border-bottom: 2px solid #38bdf8;
-            padding-bottom: 10px;
-            margin-bottom: 5px;
-        }
-
-        .dispositivo-card {
-            background-color: #334155;
-            padding: 15px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background 0.3s, transform 0.2s;
-        }
-
-        /* Diseño destacado para tu tarjeta real */
-        .nodo-real-card {
-            background-color: #0f172a;
-            border-left: 5px solid #22c55e;
-        }
-
-        .dispositivo-card:hover {
-            background-color: #475569;
-            transform: scale(1.02);
-        }
-
-        .dispositivo-card h3 {
-            font-size: 1rem;
-            color: #38bdf8;
-            margin-bottom: 5px;
-        }
-
-        .nodo-real-card h3 {
-            color: #22c55e;
-        }
-
-        .dispositivo-card p {
-            font-size: 0.85rem;
-            color: #cbd5e1;
-            margin-top: 3px;
-            line-height: 1.3rem;
-        }
-
-        #map-container {
-            flex-grow: 1;
-            height: 100%;
-        }
-
-        #map-frame {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+        body { display: flex; height: 100vh; background-color: #f4f6f9; }
+        #sidebar { width: 320px; background-color: #1e293b; color: #ffffff; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
+        #sidebar h2 { font-size: 1.2rem; border-bottom: 2px solid #22c55e; padding-bottom: 10px; }
+        .dispositivo-card { background-color: #0f172a; padding: 15px; border-radius: 8px; border-left: 5px solid #22c55e; }
+        .dispositivo-card h3 { font-size: 1rem; color: #22c55e; margin-bottom: 5px; }
+        .dispositivo-card p { font-size: 0.85rem; color: #cbd5e1; line-height: 1.4rem; }
+        #map-container { flex-grow: 1; height: 100%; }
+        #map-frame { width: 100%; height: 100%; border: none; }
     </style>
 </head>
 <body>
 
     <div id="sidebar">
-        <h2>Transmisión Real LoRa</h2>
-        
-        <div class="dispositivo-card nodo-real-card" onclick="cargarUbicacionNodo('Gabriel')">
+        <h2>Ubicación en Tiempo Real</h2>
+        <div class="dispositivo-card">
             <h3>📡 Nodo: GABRIEL</h3>
-            <p id="gabriel-info">Esperando datos del T-Beam...</p>
-        </div>
-
-        <h2>Simuladores de Respaldo</h2>
-        
-        <div class="dispositivo-card" onclick="cargarUbicacionNodo('lora1')">
-            <h3>LORA 1</h3>
-            <p id="lora1-info">Cargando...</p>
-        </div>
-
-        <div class="dispositivo-card" onclick="cargarUbicacionNodo('lora2')">
-            <h3>LORA 2</h3>
-            <p id="lora2-info">Cargando...</p>
-        </div>
-
-        <div class="dispositivo-card" onclick="cargarUbicacionNodo('lily1')">
-            <h3>Lilygo Estática 1</h3>
-            <p id="lily1-info">Cargando...</p>
+            <p id="gabriel-info">Esperando primera transmisión GPS...</p>
         </div>
     </div>
 
@@ -118,56 +31,42 @@
     </div>
 
     <script>
-        let ultimoPaquete = -1;
-        // Coordenadas base en el centro de Cuenca
-        let latBase = -2.9001;
-        let lonBase = -79.0045;
+        let ultimaCoordenada = "";
 
-        async function obtenerDatos() {
+        async function obtenerDatosTiempoReal() {
             try {
+                // Leemos el JSON rompiendo el caché para asegurar el tiempo real
                 const respuesta = await fetch('./datos.json?t=' + new Date().getTime());
-                datosSensores = await respuesta.json();
+                const datos = await respuesta.json();
                 
-                if (datosSensores.Gabriel) {
-                    // 1. Extraer el número de paquete que manda TagoIO usando expresiones regulares
-                    const strDatos = datosSensores.Gabriel.estado || ''; 
-                    const matchPaquete = strDatos.match(/Paquete=(\d+)/);
-                    let numeroPaquete = matchPaquete ? parseInt(matchPaquete[1]) : 0;
+                if (datos.Gabriel) {
+                    const coord = datos.Gabriel.coordenadas;
+                    const paquetes = datos.Gabriel.paquetes || '0';
+                    const rssi = datos.Gabriel.rssi || '0';
+                    const estado = datos.Gabriel.estado || 'Activo';
 
-                    // 2. Si el número de paquete cambió, simulamos movimiento real por Cuenca
-                    if (numeroPaquete !== ultimoPaquete && numeroPaquete > 0) {
-                        ultimoPaquete = numeroPaquete;
-                        
-                        // Genera un micro-desplazamiento simulando caminata en vivo
-                        latBase += (Math.random() - 0.5) * 0.001;
-                        lonBase += (Math.random() - 0.5) * 0.001;
-                        
-                        // Guardamos la nueva coordenada real/dinámica en el objeto
-                        datosSensores.Gabriel.coordenadas = `${latBase.toFixed(6)},${lonBase.toFixed(6)}`;
-                        
-                        // Forzamos al mapa a centrarse automáticamente en la nueva posición
-                        actualizarMapaAutomatico(datosSensores.Gabriel.coordenadas);
-                    }
-
-                    // 3. Pintamos la interfaz en el panel lateral con los datos que inyecta TagoIO
+                    // Actualizamos el panel lateral en vivo
                     document.getElementById('gabriel-info').innerHTML = `
-                        <strong>Datos LoRa:</strong> ${strDatos}<br>
-                        <strong>Calidad RSSI:</strong> ${datosSensores.Gabriel.rssi || '--'} dBm<br>
-                        <span style="color:#22c55e; font-size:0.75rem;">GPS Dinámico: ${datosSensores.Gabriel.coordenadas}</span>
+                        <strong>Estado:</strong> ${estado}<br>
+                        <strong>Paquetes Recibidos:</strong> ${paquetes}<br>
+                        <strong>Señal RSSI:</strong> ${rssi} dBm<br>
+                        <span style="color:#38bdf8; font-size:0.8rem;">Coordenadas: ${coord}</span>
                     `;
+
+                    // Si la coordenada cambió en GitHub, movemos el mapa inmediatamente
+                    if (coord && coord !== "0.0,0.0" && coord !== ultimaCoordenada) {
+                        ultimaCoordenada = coord;
+                        document.getElementById('map-frame').src = `https://maps.google.com/maps?q=${coord}&t=&z=17&ie=UTF8&iwloc=&output=embed`;
+                    }
                 }
-
-                document.getElementById('lora1-info').innerText = `Coord: ${datosSensores.lora1?.coordenadas || '0.0,0.0'}`;
-                document.getElementById('lora2-info').innerText = `Coord: ${datosSensores.lora2?.coordenadas || '0.0,0.0'}`;
-                document.getElementById('lily1-info').innerText = `Coord: ${datosSensores.lily1?.coordenadas || '0.0,0.0'}`;
-
             } catch (error) {
-                console.error("Error al procesar los datos dinámicos:", error);
+                console.error("Esperando actualización de TagoIO...", error);
             }
         }
 
-        // Función auxiliar para mover el mapa solo sin intervención del usuario
-        function actualizarMapaAutomatico(coordenadas) {
-            const iframe = document.getElementById('map-frame');
-            iframe.src = `https://maps.google.com/maps?q=${coordenadas}&t=&z=17&ie=UTF8&iwloc=&output=embed`;
-        }
+        // Ejecutar al cargar la página y revisar cambios automáticamente cada 3 segundos
+        obtenerDatosTiempoReal();
+        setInterval(obtenerDatosTiempoReal, 3000);
+    </script>
+</body>
+</html>
