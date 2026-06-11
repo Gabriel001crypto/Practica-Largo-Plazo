@@ -47,7 +47,6 @@
             gap: 5px;
         }
 
-        /* Color personalizado para destacar tu nodo */
         .nodo-gabriel {
             border-left-color: #22c55e;
             background-color: #0f172a;
@@ -91,61 +90,55 @@
     <div id="sidebar">
         <h2>Nodos Activos LoRa</h2>
         
-        <!-- NODO GABRIEL -->
         <div class="dispositivo-card nodo-gabriel">
             <h3>📡 NODO: GABRIEL</h3>
             <p>Paquetes Recibidos:</p>
             <p class="packet-count" id="p-gabriel">0</p>
         </div>
 
-        <!-- NODO JIMMY -->
         <div class="dispositivo-card" style="border-left-color: #a855f7;">
             <h3>📡 NODO: JIMMY LORA 32</h3>
             <p>Paquetes Recibidos:</p>
-            <p class="packet-count" id="p-jimmy" style="color: #cbd5e1;">0</p>
+            <p class="packet-count" id="p-jimmy">0</p>
         </div>
 
-        <!-- NODO AUGUSTO -->
         <div class="dispositivo-card" style="border-left-color: #f97316;">
             <h3>📡 NODO: AUGUSTO HELTEC</h3>
             <p>Paquetes Recibidos:</p>
-            <p class="packet-count" id="p-augusto" style="color: #cbd5e1;">0</p>
+            <p class="packet-count" id="p-augusto">0</p>
         </div>
     </div>
 
     <div id="map-container">
-        <!-- El mapa fijo en Cuenca se mantiene intacto de fondo -->
-        <iframe id="map-frame" src="https://maps.google.com/maps?q=-2.9001,-79.0045&t=&z=16&ie=UTF8&iwloc=&output=embed"></iframe>
+        <iframe id="map-frame" src="https://maps.google.com/maps?q=-2.9001,-79.0045&t=&z=15&ie=UTF8&iwloc=&output=embed"></iframe>
     </div>
 
     <script>
         async function obtenerPaquetes() {
             try {
-                // Fetch al JSON rompiendo el caché del navegador para tiempo real
+                // Petición al JSON rompiendo la caché para actualización en tiempo real
                 const respuesta = await fetch('./datos.json?t=' + new Date().getTime());
                 const datos = await respuesta.json();
                 
-                // Actualizar contador de Gabriel
+                // Mapeo dinámico de los paquetes recibidos desde el JSON
                 if (datos.Gabriel) {
                     document.getElementById('p-gabriel').innerText = datos.Gabriel.paquetes || '0';
                 }
 
-                // Actualizar contador de JimmyLora32
                 if (datos.JimmyLora32) {
                     document.getElementById('p-jimmy').innerText = datos.JimmyLora32.paquetes || '0';
                 }
 
-                // Actualizar contador de AUGUSTO_HELTEC
                 if (datos.AUGUSTO_HELTEC) {
                     document.getElementById('p-augusto').innerText = datos.AUGUSTO_HELTEC.paquetes || '0';
                 }
 
             } catch (error) {
-                console.error("Esperando actualización de paquetes desde TagoIO...", error);
+                console.error("Esperando sincronización de TagoIO...", error);
             }
         }
 
-        // Ejecución inicial y revisión automática cada 3 segundos
+        // Ejecutar inmediatamente y refrescar de forma automática cada 3 segundos
         obtenerPaquetes();
         setInterval(obtenerPaquetes, 3000);
     </script>
