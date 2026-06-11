@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel de Control LoRa - Tiempo Real</title>
+    <title>Panel LoRa - Solo Paquetes</title>
     <style>
         * {
             box-sizing: border-box;
@@ -49,7 +49,6 @@
             padding: 25px;
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
             border-top: 6px solid #22c55e;
-            transition: transform 0.2s;
         }
 
         .card h2 {
@@ -77,7 +76,7 @@
         }
 
         .metric span.value {
-            font-size: 2.2rem;
+            font-size: 2.5rem;
             font-weight: bold;
             color: #22c55e;
         }
@@ -94,14 +93,14 @@
 </head>
 <body>
 
-    <h1>📡 Sistema de Monitoreo de Paquetes LoRa</h1>
-    <p class="subtitle">Datos procesados en tiempo real desde el Live Inspector de TagoIO</p>
+    <h1>📡 Monitoreo de Paquetes LoRa</h1>
+    <p class="subtitle">Panel de Control Simplificado - Sin Mapas</p>
 
     <div id="dashboard">
         <div class="card">
             <h2><span class="status-online"></span> GABRIEL</h2>
             <div class="metric">
-                <span class="label">Paquetes Recibidos:</span>
+                <span class="label">Paquetes:</span>
                 <span class="value" id="p-gabriel">0</span>
             </div>
         </div>
@@ -109,9 +108,61 @@
         <div class="card" style="border-top-color: #a855f7;">
             <h2><span class="status-online"></span> JIMMY LORA 32</h2>
             <div class="metric">
-                <span class="label">Paquetes Recibidos:</span>
+                <span class="label">Paquetes:</span>
                 <span class="value" id="p-jimmy" style="color: #a855f7;">0</span>
             </div>
         </div>
 
-        <div class="card" style="border-top-
+        <div class="card" style="border-top-color: #f97316;">
+            <h2><span class="status-online"></span> AUGUSTO HELTEC</h2>
+            <div class="metric">
+                <span class="label">Paquetes:</span>
+                <span class="value" id="p-augusto" style="color: #f97316;">0</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Función encargada de romper la cadena "Sensor=Activo,Paquete=193" y sacar solo el número
+        function extraerPaquete(nodo) {
+            if (!nodo) return '0';
+            
+            // Si ya viene como número puro
+            if (nodo.paquetes !== undefined && nodo.paquetes !== "") {
+                return nodo.paquetes;
+            }
+            
+            // Si viene de TagoIO como texto largo en "estado", "info" o "datos"
+            const textoLargo = nodo.estado || nodo.info || nodo.datos || '';
+            const coincidencia = textoLargo.match(/Paquete=(\d+)/);
+            
+            return coincidencia ? coincidencia[1] : '0';
+        }
+
+        async function cargarDatos() {
+            try {
+                // Buscamos el archivo datos.json con un número aleatorio para evitar la caché
+                const respuesta = await fetch('./datos.json?v=' + Math.random());
+                const datos = await respuesta.json();
+                
+                // Mapeamos de forma elástica buscando tanto minúsculas como mayúsculas
+                const nodoGabriel = datos.Gabriel || datos.GABRIEL || datos.lora1;
+                const nodoJimmy = datos.JimmyLora32 || datos.lora2;
+                const nodoAugusto = datos.AUGUSTO_HELTEC || datos.lora3;
+
+                // Insertamos los valores procesados en la pantalla
+                document.getElementById('p-gabriel').innerText = extraerPaquete(nodoGabriel);
+                document.getElementById('p-jimmy').innerText = extraerPaquete(nodoJimmy);
+                document.getElementById('p-augusto').innerText = extraerPaquete(nodoAugusto);
+
+            } catch (e) {
+                console.log("Sincronizando con TagoIO...");
+            }
+        }
+
+        // Ejecutar al abrir y refrescar cada 2 segundos
+        cargarDatos();
+        setInterval(cargarDatos, 2000);
+    </script>
+</body>
+</html>
