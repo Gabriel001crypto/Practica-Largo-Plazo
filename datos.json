@@ -1,8 +1,14 @@
 {
   "Gabriel": {
-    "coordenadas": "$LATITUD_REAL,$LONGITUD_REAL",
-    "estado": "Sensor=Activo",
-    "paquetes": "$CONTADOR_DE_PAQUETES",
-    "rssi": "$RSSI_REAL"
+    "paquetes": "0",
+    "rssi": "0"
+  },
+  "JimmyLora32": {
+    "paquetes": "0",
+    "rssi": "0"
+  },
+  "AUGUSTO_HELTEC": {
+    "paquetes": "0",
+    "rssi": "0"
   }
 }
