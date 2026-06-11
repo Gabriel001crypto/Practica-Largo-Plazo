@@ -110,35 +110,40 @@
     </div>
 
     <div id="map-container">
-        <iframe id="map-frame" src="https://maps.google.com/maps?q=-2.9001,-79.0045&t=&z=15&ie=UTF8&iwloc=&output=embed"></iframe>
+        <iframe id="map-frame" src="https://maps.google.com/maps?q=$?ll=-2.9001,-79.0045&z=16&output=embed"></iframe>
     </div>
 
     <script>
+        // Función para extraer números de paquetes si vienen dentro de cadenas largas de texto
+        function extraerPaquete(objetoNodo) {
+            if (!objetoNodo) return '0';
+            if (objetoNodo.paquetes) return objetoNodo.paquetes;
+            
+            // Si el dato viene metido en el campo de estado o info (Ej: "Paquete=193")
+            const textoBuscar = objetoNodo.estado || objetoNodo.info || '';
+            const coincidencia = textoBuscar.match(/Paquete=(\d+)/);
+            return coincidencia ? coincidencia[1] : '0';
+        }
+
         async function obtenerPaquetes() {
             try {
-                // Petición al JSON rompiendo la caché para actualización en tiempo real
                 const respuesta = await fetch('./datos.json?t=' + new Date().getTime());
                 const datos = await respuesta.json();
                 
-                // Mapeo dinámico de los paquetes recibidos desde el JSON
-                if (datos.Gabriel) {
-                    document.getElementById('p-gabriel').innerText = datos.Gabriel.paquetes || '0';
-                }
+                // Buscamos los datos sin importar si TagoIO escribe en mayúsculas o minúsculas
+                const nodoGabriel = datos.Gabriel || datos.GABRIEL;
+                const nodoJimmy = datos.JimmyLora32 || datos.lora2;
+                const nodoAugusto = datos.AUGUSTO_HELTEC || datos.lora3;
 
-                if (datos.JimmyLora32) {
-                    document.getElementById('p-jimmy').innerText = datos.JimmyLora32.paquetes || '0';
-                }
-
-                if (datos.AUGUSTO_HELTEC) {
-                    document.getElementById('p-augusto').innerText = datos.AUGUSTO_HELTEC.paquetes || '0';
-                }
+                document.getElementById('p-gabriel').innerText = extraerPaquete(nodoGabriel);
+                document.getElementById('p-jimmy').innerText = extraerPaquete(nodoJimmy);
+                document.getElementById('p-augusto').innerText = extraerPaquete(nodoAugusto);
 
             } catch (error) {
-                console.error("Esperando sincronización de TagoIO...", error);
+                console.error("Esperando transmisión de datos LoRa válida...", error);
             }
         }
 
-        // Ejecutar inmediatamente y refrescar de forma automática cada 3 segundos
         obtenerPaquetes();
         setInterval(obtenerPaquetes, 3000);
     </script>
