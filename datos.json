@@ -1,13 +1,13 @@
 {
-  "GABRIEL": {
+  "lora1": {
     "coordenadas": "0.0,0.0",
     "info": "Esperando señal GPS..."
   },
-  " JIMMY LORA 32": {
+  "lora2": {
     "coordenadas": "0.0,0.0",
     "info": "Esperando señal GPS..."
   },
-  "AUGUSTO HELTEC": {
+  "lora3": {
     "coordenadas": "0.0,0.0",
     "info": "Esperando señal GPS..."
   },
