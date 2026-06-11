@@ -65,7 +65,7 @@
 <body>
 
     <h1>📡 Monitoreo de Paquetes LoRa</h1>
-    <p class="subtitle">Panel de Control General (Sin mapas)</p>
+    <p class="subtitle">Panel de Control General - Extracción desde TagoIO</p>
 
     <div id="dashboard">
         <div class="card">
@@ -94,48 +94,48 @@
     </div>
 
     <script>
-        // Función extractora: saca el número de paquete sin importar el formato de TagoIO
+        // Súper extractor de paquetes: busca en cualquier rincón del objeto de TagoIO
         function procesarDatoTago(nodo) {
             if (!nodo) return '0';
             
-            // 1. Si TagoIO manda el número directo (ej: "paquetes": "193")
+            // 1. Si viene como un número directo en la variable paquetes
             if (nodo.paquetes !== undefined && nodo.paquetes !== "") return nodo.paquetes;
             
-            // 2. Extrae el texto donde sea que TagoIO guarde la cadena
-            const textoCualquiera = nodo.estado || nodo.info || nodo.datos || '';
+            // 2. Une todos los textos posibles donde TagoIO guarda información
+            const textoLargo = "" + (nodo.estado || "") + " " + (nodo.info || "") + " " + (nodo.datos || "");
             
-            // 3. Si viene la cadena exacta de Tago "Sensor=Activo,Paquete=193"
-            const regexPaquete = textoCualquiera.match(/Paquete=(\d+)/);
+            // 3. Intenta buscar el patrón exacto "Paquete=XYZ" del Live Inspector
+            const regexPaquete = textoLargo.match(/Paquete=(\d+)/);
             if (regexPaquete) return regexPaquete[1];
             
-            // 4. Si viene solo un número suelto dentro del texto
-            const regexNumeroSuelto = textoCualquiera.match(/\d+/);
+            // 4. Si TagoIO manda la cadena en otro orden, extrae cualquier número válido
+            const regexNumeroSuelto = textoLargo.match(/\d+/);
             return regexNumeroSuelto ? regexNumeroSuelto[0] : '0';
         }
 
         async function solicitarDatos() {
             try {
-                // Forzamos la actualización del JSON ignorando la caché del navegador
+                // Petición rompiendo la caché del navegador para ver cambios en vivo
                 const res = await fetch('./datos.json?nocache=' + new Date().getTime());
                 const info = await res.json();
 
-                // Mapeo flexible buscando por llaves (minúsculas, mayúsculas y nombres genéricos)
-                const g = info.Gabriel || info.GABRIEL || info.lora1;
-                const j = info.JimmyLora32 || info.lora2;
-                const a = info.AUGUSTO_HELTEC || info.lora3;
+                // Mapeo Ultra-Flexible: Busca por ID genérico (lora1) o por nombre (Gabriel)
+                const g = info.lora1 || info.Gabriel || info.GABRIEL;
+                const j = info.lora2 || info.JimmyLora32 || info.jimmyData;
+                const a = info.lora3 || info.AUGUSTO_HELTEC || info.augustoData;
 
-                // Inyectamos el valor procesado en cada tarjeta
+                // Actualizar los textos de la interfaz web
                 document.getElementById('p-gabriel').innerText = procesarDatoTago(g);
                 document.getElementById('p-jimmy').innerText = procesarDatoTago(j);
                 document.getElementById('p-augusto').innerText = procesarDatoTago(a);
             } catch (err) {
-                console.log("Esperando tramas válidas desde TagoIO...");
+                console.log("Sincronizando flujos de TagoIO...");
             }
         }
 
+        // Ejecución inmediata y actualización cada 2 segundos
         solicitarDatos();
-        // Actualización en tiempo real ultra rápida cada 2.5 segundos
-        setInterval(solicitarDatos, 2500);
+        setInterval(solicitarDatos, 2000);
     </script>
 </body>
 </html>
