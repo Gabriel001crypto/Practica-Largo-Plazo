@@ -1,24 +1,11 @@
 {
-  "lora1": {
-    "coordenadas": "0.0,0.0",
-    "info": "Esperando señal GPS..."
+  "GABRIEL": {
+    "estado": "Sensor=Activo,Paquete=0"
   },
-  "lora2": {
-    "coordenadas": "0.0,0.0",
-    "info": "Esperando señal GPS..."
+  "JIMMY LORA 32": {
+    "estado": "Sensor=Activo,Paquete=0"
   },
-  "lora3": {
-    "coordenadas": "0.0,0.0",
-    "info": "Esperando señal GPS..."
-  },
-  "lily1": {
-    "estado": "Desconectado",
-    "bateria": "0%",
-    "coordenadas": "0.0,0.0"
-  },
-  "lily2": {
-    "estado": "Desconectado",
-    "bateria": "0%",
-    "coordenadas": "0.0,0.0"
+  "AUGUSTO HELTEC": {
+    "estado": "Sensor=Activo,Paquete=0"
   }
 }
