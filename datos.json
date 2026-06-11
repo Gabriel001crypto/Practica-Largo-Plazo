@@ -3,11 +3,9 @@
     "coordenadas": "-2.9001,-79.0045",
     "estado": "Activo",
     "paquetes": "0",
-    "rssi": "-75 dBm"
+    "rssi": "-75"
   },
   "lora1": { "coordenadas": "0.0,0.0" },
   "lora2": { "coordenadas": "0.0,0.0" },
-  "lora3": { "coordenadas": "0.0,0.0" },
-  "lily1": { "coordenadas": "0.0,0.0" },
-  "lily2": { "coordenadas": "0.0,0.0" }
+  "lily1": { "coordenadas": "0.0,0.0" }
 }
