@@ -1,24 +1,24 @@
 {
   "lora1": {
-    "coordenadas": "0.0,0.0",
-    "info": "Esperando señal GPS..."
+    "coordenadas": "-2.8974,-79.0045",
+    "info": "[JimmyLora32] Sensor=Activo,Paquete=515"
   },
   "lora2": {
-    "coordenadas": "0.0,0.0",
-    "info": "Esperando señal GPS..."
+    "coordenadas": "-2.8980,-79.0050",
+    "info": "Esperando datos del dispositivo..."
   },
   "lora3": {
-    "coordenadas": "0.0,0.0",
-    "info": "Esperando señal GPS..."
+    "coordenadas": "-2.8990,-79.0060",
+    "info": "Esperando datos del dispositivo..."
   },
   "lily1": {
     "estado": "Desconectado",
     "bateria": "0%",
-    "coordenadas": "0.0,0.0"
+    "coordenadas": "-2.8950,-79.0030"
   },
   "lily2": {
     "estado": "Desconectado",
     "bateria": "0%",
-    "coordenadas": "0.0,0.0"
+    "coordenadas": "-2.8960,-79.0040"
   }
 }
