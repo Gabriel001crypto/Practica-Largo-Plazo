@@ -1,11 +1,24 @@
 {
-  "Gabriel": {
-    "paquetes": "0"
+  "lora1": {
+    "coordenadas": "0.0,0.0",
+    "info": "Esperando señal GPS..."
   },
-  "JimmyLora32": {
-    "paquetes": "0"
+  "lora2": {
+    "coordenadas": "0.0,0.0",
+    "info": "Esperando señal GPS..."
   },
-  "AUGUSTO_HELTEC": {
-    "paquetes": "0"
+  "lora3": {
+    "coordenadas": "0.0,0.0",
+    "info": "Esperando señal GPS..."
+  },
+  "lily1": {
+    "estado": "Desconectado",
+    "bateria": "0%",
+    "coordenadas": "0.0,0.0"
+  },
+  "lily2": {
+    "estado": "Desconectado",
+    "bateria": "0%",
+    "coordenadas": "0.0,0.0"
   }
 }
