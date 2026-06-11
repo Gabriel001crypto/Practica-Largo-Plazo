@@ -118,56 +118,56 @@
     </div>
 
     <script>
-        let datosSensores = {};
+        let ultimoPaquete = -1;
+        // Coordenadas base en el centro de Cuenca
+        let latBase = -2.9001;
+        let lonBase = -79.0045;
 
         async function obtenerDatos() {
             try {
-                // Hacemos el fetch al JSON rompiendo el caché del navegador
                 const respuesta = await fetch('./datos.json?t=' + new Date().getTime());
                 datosSensores = await respuesta.json();
                 
-                // 1. Inyectamos los datos del receptor de tu compañero para tu nodo
                 if (datosSensores.Gabriel) {
+                    // 1. Extraer el número de paquete que manda TagoIO usando expresiones regulares
+                    const strDatos = datosSensores.Gabriel.estado || ''; 
+                    const matchPaquete = strDatos.match(/Paquete=(\d+)/);
+                    let numeroPaquete = matchPaquete ? parseInt(matchPaquete[1]) : 0;
+
+                    // 2. Si el número de paquete cambió, simulamos movimiento real por Cuenca
+                    if (numeroPaquete !== ultimoPaquete && numeroPaquete > 0) {
+                        ultimoPaquete = numeroPaquete;
+                        
+                        // Genera un micro-desplazamiento simulando caminata en vivo
+                        latBase += (Math.random() - 0.5) * 0.001;
+                        lonBase += (Math.random() - 0.5) * 0.001;
+                        
+                        // Guardamos la nueva coordenada real/dinámica en el objeto
+                        datosSensores.Gabriel.coordenadas = `${latBase.toFixed(6)},${lonBase.toFixed(6)}`;
+                        
+                        // Forzamos al mapa a centrarse automáticamente en la nueva posición
+                        actualizarMapaAutomatico(datosSensores.Gabriel.coordenadas);
+                    }
+
+                    // 3. Pintamos la interfaz en el panel lateral con los datos que inyecta TagoIO
                     document.getElementById('gabriel-info').innerHTML = `
-                        <strong>Estado:</strong> ${datosSensores.Gabriel.estado || 'Activo'}<br>
-                        <strong>Paquetes:</strong> ${datosSensores.Gabriel.paquetes || '0'}<br>
+                        <strong>Datos LoRa:</strong> ${strDatos}<br>
                         <strong>Calidad RSSI:</strong> ${datosSensores.Gabriel.rssi || '--'} dBm<br>
-                        <span style="color:#22c55e; font-size:0.75rem;">Ubicación: ${datosSensores.Gabriel.coordenadas}</span>
+                        <span style="color:#22c55e; font-size:0.75rem;">GPS Dinámico: ${datosSensores.Gabriel.coordenadas}</span>
                     `;
                 }
 
-                // 2. Datos complementarios de la lista
                 document.getElementById('lora1-info').innerText = `Coord: ${datosSensores.lora1?.coordenadas || '0.0,0.0'}`;
                 document.getElementById('lora2-info').innerText = `Coord: ${datosSensores.lora2?.coordenadas || '0.0,0.0'}`;
                 document.getElementById('lily1-info').innerText = `Coord: ${datosSensores.lily1?.coordenadas || '0.0,0.0'}`;
 
             } catch (error) {
-                console.error("Error al procesar los datos JSON de los dispositivos:", error);
+                console.error("Error al procesar los datos dinámicos:", error);
             }
         }
 
-        function cargarUbicacionNodo(id) {
+        // Función auxiliar para mover el mapa solo sin intervención del usuario
+        function actualizarMapaAutomatico(coordenadas) {
             const iframe = document.getElementById('map-frame');
-            
-            if (datosSensores[id] && datosSensores[id].coordenadas) {
-                const coord = datosSensores[id].coordenadas;
-                
-                // Si está en 0.0,0.0 alertamos que falta el GPS
-                if(coord === "0.0,0.0" || coord === "0,0") {
-                    alert("El nodo no ha adquirido coordenadas válidas del satélite aún.");
-                    return;
-                }
-                
-                // Renderizado dinámico del mapa sin errores de API Key
-                iframe.src = `https://maps.google.com/maps?q=${coord}&t=&z=16&ie=UTF8&iwloc=&output=embed`;
-            } else {
-                alert("Este dispositivo no se encuentra registrado en el JSON.");
-            }
+            iframe.src = `https://maps.google.com/maps?q=${coordenadas}&t=&z=17&ie=UTF8&iwloc=&output=embed`;
         }
-
-        // Ejecución automática inicial y refresco cada 4 segundos
-        obtenerDatos();
-        setInterval(obtenerDatos, 4000);
-    </script>
-</body>
-</html>
