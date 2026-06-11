@@ -3,70 +3,180 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monitoreo LoRa - Tiempo Real</title>
+    <title>Panel de Monitoreo LoRaWAN - Tiempo Real</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
-        body { display: flex; height: 100vh; background-color: #f4f6f9; }
-        #sidebar { width: 320px; background-color: #1e293b; color: #ffffff; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
-        #sidebar h2 { font-size: 1.2rem; border-bottom: 2px solid #22c55e; padding-bottom: 10px; }
-        .dispositivo-card { background-color: #0f172a; padding: 15px; border-radius: 8px; border-left: 5px solid #22c55e; }
-        .dispositivo-card h3 { font-size: 1rem; color: #22c55e; margin-bottom: 5px; }
-        .dispositivo-card p { font-size: 0.85rem; color: #cbd5e1; line-height: 1.4rem; }
-        #map-container { flex-grow: 1; height: 100%; }
-        #map-frame { width: 100%; height: 100%; border: none; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #0f172a;
+            color: #f8fafc;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        h1 {
+            font-size: 2rem;
+            color: #38bdf8;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .subtitle {
+            color: #94a3b8;
+            margin-bottom: 40px;
+            font-size: 1rem;
+        }
+
+        #dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            width: 100%;
+            max-width: 1100px;
+        }
+
+        .card {
+            background-color: #1e293b;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+            border-top: 6px solid #38bdf8;
+            transition: transform 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card h2 {
+            font-size: 1.4rem;
+            color: #f1f5f9;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .metric {
+            margin-top: 15px;
+            background-color: #0f172a;
+            padding: 12px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .metric span.label {
+            color: #94a3b8;
+            font-size: 0.9rem;
+        }
+
+        .metric span.value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #22c55e;
+        }
+
+        .rssi-value {
+            color: #eab308 !important;
+            font-size: 1.1rem !important;
+        }
+
+        .status-online {
+            width: 12px;
+            height: 12px;
+            background-color: #22c55e;
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 8px #22c55e;
+        }
     </style>
 </head>
 <body>
 
-    <div id="sidebar">
-        <h2>Ubicación en Tiempo Real</h2>
-        <div class="dispositivo-card">
-            <h3>📡 Nodo: GABRIEL</h3>
-            <p id="gabriel-info">Esperando primera transmisión GPS...</p>
+    <h1>📡 Sistema de Monitoreo de Red LoRa</h1>
+    <p class="subtitle">Capa de Aplicación - Datos en tiempo real desde TagoIO</p>
+
+    <div id="dashboard">
+        <div class="card">
+            <h2><span class="status-online"></span> GABRIEL</h2>
+            <div class="metric">
+                <span class="label">Nº Paquetes:</span>
+                <span class="value" id="p-gabriel">0</span>
+            </div>
+            <div class="metric">
+                <span class="label">Señal (RSSI):</span>
+                <span class="value rssi-value" id="r-gabriel">-- dBm</span>
+            </div>
+        </div>
+
+        <div class="card" style="border-top-color: #a855f7;">
+            <h2><span class="status-online"></span> JIMMY LORA 32</h2>
+            <div class="metric">
+                <span class="label">Nº Paquetes:</span>
+                <span class="value" id="p-jimmy" style="color: #a855f7;">0</span>
+            </div>
+            <div class="metric">
+                <span class="label">Señal (RSSI):</span>
+                <span class="value rssi-value" id="r-jimmy">-- dBm</span>
+            </div>
+        </div>
+
+        <div class="card" style="border-top-color: #f97316;">
+            <h2><span class="status-online"></span> AUGUSTO HELTEC</h2>
+            <div class="metric">
+                <span class="label">Nº Paquetes:</span>
+                <span class="value" id="p-augusto" style="color: #f97316;">0</span>
+            </div>
+            <div class="metric">
+                <span class="label">Señal (RSSI):</span>
+                <span class="value rssi-value" id="r-augusto">-- dBm</span>
+            </div>
         </div>
     </div>
 
-    <div id="map-container">
-        <iframe id="map-frame" src="about:blank"></iframe>
-    </div>
-
     <script>
-        let ultimaCoordenada = "";
-
-        async function obtenerDatosTiempoReal() {
+        async function actualizarDashboard() {
             try {
-                // Leemos el JSON rompiendo el caché para asegurar el tiempo real
+                // Petición al JSON rompiendo el caché para tiempo real estricto
                 const respuesta = await fetch('./datos.json?t=' + new Date().getTime());
                 const datos = await respuesta.json();
-                
+
+                // Actualizar Dispositivo: Gabriel
                 if (datos.Gabriel) {
-                    const coord = datos.Gabriel.coordenadas;
-                    const paquetes = datos.Gabriel.paquetes || '0';
-                    const rssi = datos.Gabriel.rssi || '0';
-                    const estado = datos.Gabriel.estado || 'Activo';
-
-                    // Actualizamos el panel lateral en vivo
-                    document.getElementById('gabriel-info').innerHTML = `
-                        <strong>Estado:</strong> ${estado}<br>
-                        <strong>Paquetes Recibidos:</strong> ${paquetes}<br>
-                        <strong>Señal RSSI:</strong> ${rssi} dBm<br>
-                        <span style="color:#38bdf8; font-size:0.8rem;">Coordenadas: ${coord}</span>
-                    `;
-
-                    // Si la coordenada cambió en GitHub, movemos el mapa inmediatamente
-                    if (coord && coord !== "0.0,0.0" && coord !== ultimaCoordenada) {
-                        ultimaCoordenada = coord;
-                        document.getElementById('map-frame').src = `https://maps.google.com/maps?q=${coord}&t=&z=17&ie=UTF8&iwloc=&output=embed`;
-                    }
+                    document.getElementById('p-gabriel').innerText = datos.Gabriel.paquetes || '0';
+                    document.getElementById('r-gabriel').innerText = (datos.Gabriel.rssi || '--') + ' dBm';
                 }
+
+                // Actualizar Dispositivo: JimmyLora32
+                if (datos.JimmyLora32) {
+                    document.getElementById('p-jimmy').innerText = datos.JimmyLora32.paquetes || '0';
+                    document.getElementById('r-jimmy').innerText = (datos.JimmyLora32.rssi || '--') + ' dBm';
+                }
+
+                // Actualizar Dispositivo: AUGUSTO_HELTEC
+                if (datos.AUGUSTO_HELTEC) {
+                    document.getElementById('p-augusto').innerText = datos.AUGUSTO_HELTEC.paquetes || '0';
+                    document.getElementById('r-augusto').innerText = (datos.AUGUSTO_HELTEC.rssi || '--') + ' dBm';
+                }
+
             } catch (error) {
-                console.error("Esperando actualización de TagoIO...", error);
+                console.error("Esperando actualización de datos desde TagoIO...", error);
             }
         }
 
-        // Ejecutar al cargar la página y revisar cambios automáticamente cada 3 segundos
-        obtenerDatosTiempoReal();
-        setInterval(obtenerDatosTiempoReal, 3000);
+        // Ejecutar inmediatamente y luego cada 3 segundos
+        actualizarDashboard();
+        setInterval(actualizarDashboard, 3000);
     </script>
 </body>
 </html>
